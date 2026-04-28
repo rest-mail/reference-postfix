@@ -1,0 +1,64 @@
+# Postfix main.cf — generic reference image
+# Rendered from template by /usr/local/bin/entrypoint.sh.
+# Override anything by mounting files into /etc/postfix-overlay/.
+
+# Identity
+smtpd_banner = ${POSTFIX_HOSTNAME} ESMTP
+myhostname = ${POSTFIX_HOSTNAME}
+mydomain = ${POSTFIX_DOMAIN}
+myorigin = ${POSTFIX_DOMAIN}
+mydestination =
+mynetworks = ${POSTFIX_MYNETWORKS}
+
+# Misc
+biff = no
+append_dot_mydomain = no
+readme_directory = no
+compatibility_level = 3.6
+
+# Virtual domain configuration (database-driven via pgsql lookup tables).
+# The lookup .cf files live in the overlay (or are mounted at /etc/postfix/sql/).
+virtual_mailbox_domains = pgsql:/etc/postfix/sql/virtual_domains.cf
+virtual_mailbox_maps    = pgsql:/etc/postfix/sql/virtual_mailboxes.cf
+virtual_alias_maps      = pgsql:/etc/postfix/sql/virtual_aliases.cf
+
+# Virtual mailbox UID/GID (5000:5000 by default; override via overlay if needed).
+virtual_mailbox_base = /var/mail/vhosts
+virtual_minimum_uid  = 5000
+virtual_uid_maps     = static:5000
+virtual_gid_maps     = static:5000
+
+# TLS
+smtpd_tls_cert_file       = ${POSTFIX_TLS_CERT}
+smtpd_tls_key_file        = ${POSTFIX_TLS_KEY}
+smtpd_tls_security_level  = may
+smtpd_tls_auth_only       = yes
+smtpd_tls_loglevel        = 1
+smtpd_tls_received_header = yes
+
+smtp_tls_security_level = may
+smtp_tls_loglevel       = 1
+
+# SASL — disabled by default. Enable via overlay (typically pointing at a
+# Dovecot socket); leaving this disabled here keeps the image standalone-runnable.
+smtpd_sasl_auth_enable      = no
+smtpd_sasl_security_options = noanonymous
+
+# Restrictions
+smtpd_recipient_restrictions =
+    permit_sasl_authenticated,
+    permit_mynetworks,
+    reject_unauth_destination
+
+smtpd_relay_restrictions =
+    permit_sasl_authenticated,
+    permit_mynetworks,
+    reject_unauth_destination
+
+# Limits
+message_size_limit       = 10240000
+maximal_queue_lifetime   = 5d
+bounce_queue_lifetime    = 5d
+
+# Logging — postfix logs via syslog; the rsyslog co-process forwards mail.* to stdout.
+maillog_file =
