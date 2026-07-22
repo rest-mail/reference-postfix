@@ -28,6 +28,12 @@ virtual_minimum_uid  = 5000
 virtual_uid_maps     = static:5000
 virtual_gid_maps     = static:5000
 
+# Delivery transport for virtual mailboxes. Defaults to Postfix's own `virtual`
+# agent (writes maildirs under virtual_mailbox_base). Set POSTFIX_VIRTUAL_TRANSPORT
+# to hand delivery to a Dovecot LMTP listener instead — e.g. lmtp:inet:mail-dovecot:24
+# — so Dovecot owns the maildir (single writer; enables sieve and quota enforcement).
+virtual_transport = ${POSTFIX_VIRTUAL_TRANSPORT}
+
 # TLS
 smtpd_tls_cert_file       = ${POSTFIX_TLS_CERT}
 smtpd_tls_key_file        = ${POSTFIX_TLS_KEY}
@@ -39,8 +45,11 @@ smtpd_tls_received_header = yes
 smtp_tls_security_level = may
 smtp_tls_loglevel       = 1
 
-# SASL — disabled by default. Enable via overlay (typically pointing at a
-# Dovecot socket); leaving this disabled here keeps the image standalone-runnable.
+# SASL — off on port 25 (smtp). The submission/smtps services in master.cf
+# enable it per-service; the backend (smtpd_sasl_type/path) and any milters are
+# wired by entrypoint.sh ONLY when POSTFIX_SASL_PATH / POSTFIX_MILTERS are set.
+# (An empty smtpd_sasl_path is a fatal postfix error, so it must not be emitted
+# unconditionally — this keeps the image standalone-runnable with SASL unset.)
 smtpd_sasl_auth_enable      = no
 smtpd_sasl_security_options = noanonymous
 

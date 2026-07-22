@@ -21,6 +21,18 @@ set -eu
 : "${POSTFIX_DB_USER:=}"
 : "${POSTFIX_DB_PASSWORD:=}"
 
+# --- Delivery / filtering ----------------------------------------------------
+# All default to the image's standalone-safe behaviour (postfix's own `virtual`
+# delivery agent, no SASL backend, no milter). Instances opt into the full
+# Postfix+Dovecot(+rspamd) topology by setting these:
+#   POSTFIX_VIRTUAL_TRANSPORT=lmtp:inet:<dovecot>:24   hand delivery to Dovecot LMTP
+#   POSTFIX_SASL_PATH=inet:<dovecot>:12345             submission/smtps auth via Dovecot
+#   POSTFIX_MILTERS=inet:<rspamd>:11332                content/DKIM filtering
+: "${POSTFIX_VIRTUAL_TRANSPORT:=virtual}"
+: "${POSTFIX_SASL_TYPE:=dovecot}"
+: "${POSTFIX_SASL_PATH:=}"
+: "${POSTFIX_MILTERS:=}"
+
 # --- TLS ---------------------------------------------------------------------
 : "${POSTFIX_TLS_CERT:=/certs/${POSTFIX_HOSTNAME}.crt}"
 : "${POSTFIX_TLS_KEY:=/certs/${POSTFIX_HOSTNAME}.key}"
@@ -32,6 +44,7 @@ set -eu
 
 export POSTFIX_HOSTNAME POSTFIX_DOMAIN POSTFIX_MYNETWORKS \
        POSTFIX_DB_HOST POSTFIX_DB_PORT POSTFIX_DB_NAME POSTFIX_DB_USER POSTFIX_DB_PASSWORD \
+       POSTFIX_VIRTUAL_TRANSPORT POSTFIX_SASL_TYPE POSTFIX_SASL_PATH POSTFIX_MILTERS \
        POSTFIX_TLS_CERT POSTFIX_TLS_KEY POSTFIX_TLS_CA_PATH POSTFIX_CA_NAME \
        POSTFIX_LOG_LEVEL
 
@@ -41,6 +54,34 @@ echo "reference-postfix: rendering config for ${POSTFIX_HOSTNAME} (${POSTFIX_DOM
 mkdir -p /etc/postfix
 envsubst </etc/postfix-defaults/main.cf.tmpl >/etc/postfix/main.cf
 cp /etc/postfix-defaults/master.cf /etc/postfix/master.cf
+
+# --- Render DB lookup maps from env (overlay/sql/ still wins below) ----------
+# Symmetric with reference-dovecot's dovecot-sql.conf.ext: the query shape is
+# baked in (the domains/mailboxes/aliases schema is the contract), the DB
+# connection comes from POSTFIX_DB_*. Instances need no sql/ overlay.
+# Only render when a DB host is configured — a rendered map with an empty
+# dbname is a fatal postfix error, whereas absent maps are a tolerated warning,
+# so this keeps the image standalone-runnable with no database.
+if [ -n "$POSTFIX_DB_HOST" ] && [ -d /etc/postfix-defaults/sql ]; then
+    mkdir -p /etc/postfix/sql
+    for t in /etc/postfix-defaults/sql/*.tmpl; do
+        [ -f "$t" ] || continue
+        envsubst <"$t" >"/etc/postfix/sql/$(basename "$t" .tmpl)"
+    done
+fi
+
+# --- Optional SASL backend + milters (set only when provided) ----------------
+# An empty smtpd_sasl_path is a fatal postfix error, so these are wired here
+# conditionally rather than emitted (possibly blank) by the template.
+if [ -n "$POSTFIX_SASL_PATH" ]; then
+    postconf -e "smtpd_sasl_type=${POSTFIX_SASL_TYPE}" "smtpd_sasl_path=${POSTFIX_SASL_PATH}"
+fi
+if [ -n "$POSTFIX_MILTERS" ]; then
+    postconf -e "smtpd_milters=${POSTFIX_MILTERS}" \
+                "non_smtpd_milters=${POSTFIX_MILTERS}" \
+                "milter_default_action=accept" \
+                "milter_protocol=6"
+fi
 
 # --- Merge overlay (files in /etc/postfix-overlay/ win over baked-in) -------
 OVERLAY_DIR="${POSTFIX_OVERLAY_DIR:-/etc/postfix-overlay}"
