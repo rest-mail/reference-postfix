@@ -1,0 +1,13 @@
+# Postfix pgsql map: valid recipient mailboxes.
+# Rendered from POSTFIX_DB_* env by entrypoint.sh into /etc/postfix/sql/.
+# Override by mounting a replacement at /etc/postfix-overlay/sql/virtual_mailboxes.cf.
+#
+# Returns the maildir path (domain/local_part/) so this map works under BOTH
+# delivery transports: the built-in `virtual` agent writes there directly, and
+# an LMTP handoff (POSTFIX_VIRTUAL_TRANSPORT=lmtp:...) just needs a non-empty
+# result to accept the recipient before Dovecot stores it.
+hosts    = ${POSTFIX_DB_HOST}
+user     = ${POSTFIX_DB_USER}
+password = ${POSTFIX_DB_PASSWORD}
+dbname   = ${POSTFIX_DB_NAME}
+query    = SELECT CONCAT(d.name, '/', m.local_part, '/') FROM mailboxes m JOIN domains d ON m.domain_id = d.id WHERE m.address='%s' AND m.active=true AND d.active=true

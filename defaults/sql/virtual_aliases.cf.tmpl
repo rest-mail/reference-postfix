@@ -1,0 +1,8 @@
+# Postfix pgsql map: address aliases (source -> destination).
+# Rendered from POSTFIX_DB_* env by entrypoint.sh into /etc/postfix/sql/.
+# Override by mounting a replacement at /etc/postfix-overlay/sql/virtual_aliases.cf.
+hosts    = ${POSTFIX_DB_HOST}
+user     = ${POSTFIX_DB_USER}
+password = ${POSTFIX_DB_PASSWORD}
+dbname   = ${POSTFIX_DB_NAME}
+query    = SELECT destination_address FROM aliases WHERE source_address='%s' AND active=true

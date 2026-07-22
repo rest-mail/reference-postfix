@@ -18,6 +18,7 @@ RUN apk add --no-cache \
 
 COPY defaults/main.cf.tmpl /etc/postfix-defaults/main.cf.tmpl
 COPY defaults/master.cf    /etc/postfix-defaults/master.cf
+COPY defaults/sql/         /etc/postfix-defaults/sql/
 COPY rsyslog.conf          /etc/rsyslog.d/postfix.conf
 COPY supervisord.conf      /etc/supervisord.conf
 COPY entrypoint.sh         /usr/local/bin/entrypoint.sh
