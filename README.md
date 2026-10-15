@@ -7,8 +7,8 @@ Useful as a standalone SMTP server or as the SMTP layer of a larger mail stack. 
 ## Image
 
 ```
-ghcr.io/rest-mail/reference-postfix:latest          # always newest
-ghcr.io/rest-mail/reference-postfix:YYYY.MM.DD      # immutable calver tag
+ghcr.io/rest-mail/reference-postfix:latest          # newest master build; pin a release instead
+ghcr.io/rest-mail/reference-postfix:X.Y.Z          # a release: git tag vX.Y.Z publishes it
 ```
 
 ## Quick start (standalone)
@@ -124,6 +124,6 @@ MIT.
 
 ## See also
 
-- [`rest-mail/conventions`](https://github.com/rest-mail/conventions) — the contract every `reference-*` image follows (overlay paths, env var naming, signal handling, calver tagging).
+- [`rest-mail/conventions`](https://github.com/rest-mail/conventions) — the contract every `reference-*` image follows (overlay paths, env var naming, signal handling, SemVer tagging).
 - [`rest-mail/reference-dovecot`](https://github.com/rest-mail/reference-dovecot) — paired IMAP/POP3/LMTP server.
 - [`rest-mail/testbed`](https://github.com/rest-mail/testbed) — full local-internet sandbox composing this image with dnsmasq, certgen, dovecot, rspamd.
