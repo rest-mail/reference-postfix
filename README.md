@@ -124,6 +124,6 @@ MIT.
 
 ## See also
 
-- [`rest-mail/conventions`](https://github.com/rest-mail/conventions) — the contract every `reference-*` image follows (overlay paths, env var naming, signal handling, calver tagging).
+- [`rest-mail/conventions`](https://github.com/rest-mail/conventions) — the contract every `reference-*` image follows (overlay paths, env var naming, signal handling, SemVer tagging).
 - [`rest-mail/reference-dovecot`](https://github.com/rest-mail/reference-dovecot) — paired IMAP/POP3/LMTP server.
 - [`rest-mail/testbed`](https://github.com/rest-mail/testbed) — full local-internet sandbox composing this image with dnsmasq, certgen, dovecot, rspamd.
