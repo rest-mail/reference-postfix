@@ -7,8 +7,8 @@ Useful as a standalone SMTP server or as the SMTP layer of a larger mail stack. 
 ## Image
 
 ```
-ghcr.io/rest-mail/reference-postfix:latest          # always newest
-ghcr.io/rest-mail/reference-postfix:YYYY.MM.DD      # immutable calver tag
+ghcr.io/rest-mail/reference-postfix:latest          # newest master build; pin a release instead
+ghcr.io/rest-mail/reference-postfix:X.Y.Z          # a release: git tag vX.Y.Z publishes it
 ```
 
 ## Quick start (standalone)
