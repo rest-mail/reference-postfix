@@ -1,8 +1,19 @@
 name: build
 
+# Images are versioned with SemVer, from a git tag: pushing v1.2.3 publishes
+# ghcr.io/<repo>:1.2.3. Anything that deploys or tests against this image
+# names one of those versions. A push to master publishes only `latest` and the
+# commit's short sha, for trying a change before it is released; neither is a
+# version and nothing should pin them.
+#
+# There were date-based (CalVer) tags here before. They are gone, and none
+# should be made again: a date says when, not what changed or whether it is safe
+# to take.
+
 on:
   push:
     branches: [master]
+    tags: ["v*"]
   workflow_dispatch:
 
 jobs:
@@ -14,18 +25,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Compute calver tag
-        id: tag
-        run: |
-          DATE=$(date -u +%Y.%m.%d)
-          BASE="ghcr.io/${{ github.repository }}"
-          N=1
-          TAG="$DATE"
-          while docker manifest inspect "$BASE:$TAG" >/dev/null 2>&1; do
-            N=$((N+1))
-            TAG="$DATE.$N"
-          done
-          echo "calver=$TAG" >>"$GITHUB_OUTPUT"
+      - name: Tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=sha,prefix=,enable=${{ github.ref_type == 'branch' }}
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -46,6 +54,5 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: |
-            ghcr.io/${{ github.repository }}:${{ steps.tag.outputs.calver }}
-            ghcr.io/${{ github.repository }}:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
