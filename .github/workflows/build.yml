@@ -9,50 +9,26 @@ name: build
 # There were date-based (CalVer) tags here before. They are gone, and none
 # should be made again: a date says when, not what changed or whether it is safe
 # to take.
+#
+# The build is rest-mail/deploy's image.yml, the one every rest-mail image
+# shares, so versioning, publishing and the HEALTHCHECK check cannot drift
+# between repositories. A pull request builds and checks the image but
+# publishes nothing.
 
 on:
   push:
     branches: [master]
     tags: ["v*"]
+  pull_request:
   workflow_dispatch:
+
+permissions: {}
 
 jobs:
   image:
-    runs-on: ubuntu-latest
+    # The most image.yml asks for. Its validate job narrows this to
+    # contents: read; only its publish job, on a trusted run, uses packages.
     permissions:
       contents: read
       packages: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Tags
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=sha,prefix=,enable=${{ github.ref_type == 'branch' }}
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+    uses: rest-mail/deploy/.github/workflows/image.yml@04cd88fdbe32848e9016ffb2aeef370b8631229d # rest-mail/deploy#8
