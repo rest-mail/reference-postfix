@@ -7,7 +7,7 @@ Useful as a standalone SMTP server or as the SMTP layer of a larger mail stack. 
 ## Image
 
 ```
-ghcr.io/rest-mail/reference-postfix:latest          # newest master build; pin a release instead
+ghcr.io/rest-mail/reference-postfix:latest          # newest main build; pin a release instead
 ghcr.io/rest-mail/reference-postfix:X.Y.Z          # a release: git tag vX.Y.Z publishes it
 ```
 
@@ -103,7 +103,7 @@ Mount cert/key as files at `POSTFIX_TLS_CERT` / `POSTFIX_TLS_KEY`. To trust a cu
 │   ├── main.cf.tmpl       # baked-in default; rendered by envsubst at startup
 │   └── master.cf          # baked-in default; copied verbatim
 ├── .github/workflows/
-│   └── build.yml          # multi-arch GHCR publish on push to master
+│   └── build.yml          # multi-arch GHCR publish on push to main
 └── tests/
     └── smoke.sh           # build + run + EHLO verify
 ```

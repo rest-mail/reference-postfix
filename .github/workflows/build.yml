@@ -2,7 +2,7 @@ name: build
 
 # Images are versioned with SemVer, from a git tag: pushing v1.2.3 publishes
 # ghcr.io/<repo>:1.2.3. Anything that deploys or tests against this image
-# names one of those versions. A push to master publishes only `latest` and the
+# names one of those versions. A push to main publishes only `latest` and the
 # commit's short sha, for trying a change before it is released; neither is a
 # version and nothing should pin them.
 #
@@ -17,7 +17,7 @@ name: build
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     tags: ["v*"]
   pull_request:
   workflow_dispatch:
